@@ -4,10 +4,10 @@
 # @Date  : 2021/2/11 10:09 下午
 # @Desc  :
 
-import os
 import copy
 import json
 import logging
+import os
 
 import torch
 from torch.utils.data import TensorDataset
@@ -134,7 +134,6 @@ def convert_examples_to_features(examples, max_seq_len, tokenizer,
         tokens = [cls_token] + tokens
         slot_id = [pad_token_label_id] + slot_id
 
-
         tokens_ids = tokenizer.convert_tokens_to_ids(tokens)
 
         # The mask has 1 for real tokens and 0 for padding tokens. Only real
@@ -152,10 +151,10 @@ def convert_examples_to_features(examples, max_seq_len, tokenizer,
         intent_id = example.intent_id
 
         context = [" ".join(s[:max_seq_len]) for s in example.context]
-        context = tokenizer.encode(cls_token + ' ' + (' ' + sep_token + ' ').join(context))
+        context = tokenizer.encode(cls_token + ' ' + (' ' + sep_token + ' ').join(context)) if context else []
         context_len = len(context)
         context_padding_length = (context_max_seq_len - context_len) if (context_max_seq_len - context_len) > 0 else 0
-        context_seq = context[:context_max_seq_len] + [pad_token_label_id] * context_padding_length
+        context_seq = context[:context_max_seq_len] + [pad_token_id] * context_padding_length
         context_mask = [1 if mask_padding_with_zero else 0] * len(context[:context_max_seq_len])
         context_mask = context_mask + ([0 if mask_padding_with_zero else 1] * context_padding_length)
 
@@ -164,7 +163,8 @@ def convert_examples_to_features(examples, max_seq_len, tokenizer,
                                                                                                 max_seq_len)
         assert len(slot_id) == max_seq_len, "Error with slot labels length {} vs {}".format(len(slot_id), max_seq_len)
         assert len(slot_mask) == max_seq_len, "Error with slot mask length {} vs {}".format(len(slot_mask), max_seq_len)
-        assert len(context_seq) == len(context_mask), "Error with context length {} vs {}".format(len(context_seq), len(context_mask))
+        assert len(context_seq) == len(context_mask), "Error with context length {} vs {}".format(len(context_seq),
+                                                                                                  len(context_mask))
 
         if ex_index < 5:
             logger.info("*** Example ***")

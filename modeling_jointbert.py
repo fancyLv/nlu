@@ -6,8 +6,9 @@
 
 import torch
 import torch.nn as nn
-from transformers import BertPreTrainedModel, BertModel, BertConfig
 from torchcrf import CRF
+from transformers import BertPreTrainedModel, BertModel
+
 from module import IntentClassifier, SlotClassifier
 
 
@@ -32,7 +33,8 @@ class JointBERT(BertPreTrainedModel):
         pooled_output = outputs[1]  # [CLS]
 
         context_output = self.bert(input_ids=context_seq, attention_mask=context_mask)[1]
-        sequence_output = torch.cat([context_output.unsqueeze(1).repeat(1, sequence_output.size(1), 1)], dim=-1)
+        sequence_output = torch.cat(
+            [context_output.unsqueeze(1).repeat(1, sequence_output.size(1), 1), sequence_output], dim=-1)
         pooled_output = torch.cat([context_output, pooled_output], dim=-1)
 
         intent_logits = self.intent_classifier(pooled_output)
