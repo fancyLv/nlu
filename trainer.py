@@ -50,7 +50,8 @@ class Trainer(object):
 
         if self.args.max_steps > 0:
             t_total = self.args.max_steps
-            self.args.num_train_epochs = self.args.max_steps // (len(train_dataloader) // self.args.gradient_accumulation_steps) + 1
+            self.args.num_train_epochs = self.args.max_steps // (
+                        len(train_dataloader) // self.args.gradient_accumulation_steps) + 1
         else:
             t_total = len(train_dataloader) // self.args.gradient_accumulation_steps * self.args.num_train_epochs
 
@@ -59,10 +60,12 @@ class Trainer(object):
         optimizer_grouped_parameters = [
             {'params': [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
              'weight_decay': self.args.weight_decay},
-            {'params': [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+            {'params': [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
+             'weight_decay': 0.0}
         ]
         optimizer = AdamW(optimizer_grouped_parameters, lr=self.args.learning_rate, eps=self.args.adam_epsilon)
-        scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=self.args.warmup_steps, num_training_steps=t_total)
+        scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=self.args.warmup_steps,
+                                                    num_training_steps=t_total)
 
         # Train!
         logger.info("***** Running training *****")
@@ -88,9 +91,9 @@ class Trainer(object):
 
                 inputs = {'tokens_ids': batch[0],
                           'tokens_mask': batch[1],
-                          'slot_id':batch[2],
-                          'slot_mask':batch[3],
-                          'intent_id':batch[4],
+                          'slot_id': batch[2],
+                          'slot_mask': batch[3],
+                          'intent_id': batch[4],
                           'context_seq': batch[5],
                           'context_mask': batch[6]}
                 outputs = self.model(**inputs)
@@ -155,9 +158,9 @@ class Trainer(object):
             with torch.no_grad():
                 inputs = {'tokens_ids': batch[0],
                           'tokens_mask': batch[1],
-                          'slot_id':batch[2],
-                          'slot_mask':batch[3],
-                          'intent_id':batch[4],
+                          'slot_id': batch[2],
+                          'slot_mask': batch[3],
+                          'intent_id': batch[4],
                           'context_seq': batch[5],
                           'context_mask': batch[6]}
                 outputs = self.model(**inputs)
@@ -198,7 +201,7 @@ class Trainer(object):
         }
 
         # Intent result
-        intent_preds = np.argmax(intent_preds, axis=1)
+        intent_preds = np.where(intent_preds > 0, 1, 0)
 
         # Slot result
         if not self.args.use_crf:

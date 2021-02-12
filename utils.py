@@ -10,6 +10,7 @@ import os
 import random
 
 import numpy as np
+import pandas as pd
 import torch
 from seqeval.metrics import precision_score, recall_score, f1_score
 from transformers import BertTokenizer
@@ -47,7 +48,7 @@ def set_seed(args):
 
 def compute_metrics(intent_preds, intent_labels, slot_preds, slot_labels):
     results = {}
-    intent_result = get_intent_metrics(intent_preds, intent_labels)
+    intent_result = get_intent_acc(intent_preds, intent_labels)
     slot_result = get_slot_metrics(slot_preds, slot_labels)
     sementic_result = get_sentence_frame_acc(intent_preds, intent_labels, slot_preds, slot_labels)
 
@@ -67,12 +68,10 @@ def get_slot_metrics(preds, labels):
     }
 
 
-def get_intent_metrics(preds, labels):
-    assert len(preds) == len(labels)
+def get_intent_acc(preds, labels):
+    acc = (np.array(preds) == np.array(labels)).all(axis=1).mean()
     return {
-        "intent_precision": precision_score(labels, preds),
-        "intent_recall": recall_score(labels, preds),
-        "intent_f1": f1_score(labels, preds)
+        "intent_acc": acc
     }
 
 
@@ -80,7 +79,7 @@ def get_sentence_frame_acc(intent_preds, intent_labels, slot_preds, slot_labels)
     """For the cases that intent and all the slots are correct (in one sentence)"""
     intent_result = (np.array(intent_preds) == np.array(intent_labels)).all(axis=1)
 
-    slot_result = (np.array(slot_preds) == np.array(slot_labels)).all(axis=1)
+    slot_result = (pd.DataFrame(slot_preds).values == pd.DataFrame(slot_labels).values).all(axis=1)
 
     sementic_acc = np.multiply(intent_result, slot_result).mean()
     return {
